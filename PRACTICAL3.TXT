@@ -1,0 +1,188 @@
+using System;
+using System.Collections.Generic;
+
+class Expense
+{
+    // Private Data Members (Encapsulation)
+    private string category;
+    private string description;
+    private double amount;
+    private DateTime date;
+
+    // Constructor
+    public Expense(string category, string description, double amount)
+    {
+        this.category = category;
+        this.description = description;
+        this.amount = amount;
+        this.date = DateTime.Now;
+    }
+
+    // Getter
+    public double GetAmount()
+    {
+        return amount;
+    }
+
+    public string GetCategory()
+    {
+        return category;
+    }
+
+    // Display Method
+    public void Display()
+    {
+        Console.WriteLine("------------------------------------------");
+        Console.WriteLine("Category    : " + category);
+        Console.WriteLine("Description : " + description);
+        Console.WriteLine("Amount      : Rs." + amount);
+        Console.WriteLine("Date        : " + date.ToShortDateString());
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        List<Expense> expenses = new List<Expense>();
+
+        while (true)
+        {
+            Console.Clear();
+            Console.WriteLine("=======================================");
+            Console.WriteLine("     EXPENSE TRACKING SYSTEM");
+            Console.WriteLine("=======================================");
+            Console.WriteLine("1. Add Expense");
+            Console.WriteLine("2. View All Expenses");
+            Console.WriteLine("3. Search Expense");
+            Console.WriteLine("4. Total Expense");
+            Console.WriteLine("5. Exit");
+            Console.WriteLine("=======================================");
+            Console.Write("Enter Choice : ");
+
+            try
+            {
+                int choice = Convert.ToInt32(Console.ReadLine());
+
+                switch (choice)
+                {
+                    case 1:
+                        Console.Write("\nEnter Category : ");
+                        string category = Console.ReadLine();
+
+                        if (string.IsNullOrWhiteSpace(category))
+                            throw new Exception("Category cannot be empty.");
+
+                        Console.Write("Enter Description : ");
+                        string description = Console.ReadLine();
+
+                        Console.Write("Enter Amount : ");
+
+                        double amount;
+
+                        if (!double.TryParse(Console.ReadLine(), out amount))
+                            throw new FormatException();
+
+                        if (amount <= 0)
+                            throw new Exception("Amount must be greater than zero.");
+
+                        Expense exp = new Expense(category, description, amount);
+
+                        expenses.Add(exp);
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("\nExpense Added Successfully.");
+                        Console.ResetColor();
+                        break;
+
+                    case 2:
+
+                        if (expenses.Count == 0)
+                        {
+                            Console.WriteLine("\nNo Expenses Found.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\n========== Expense List ==========");
+
+                            foreach (Expense e in expenses)
+                            {
+                                e.Display();
+                            }
+                        }
+
+                        break;
+
+                    case 3:
+
+                        Console.Write("\nEnter Category To Search : ");
+                        string search = Console.ReadLine();
+
+                        bool found = false;
+
+                        foreach (Expense e in expenses)
+                        {
+                            if (e.GetCategory().Equals(search, StringComparison.OrdinalIgnoreCase))
+                            {
+                                e.Display();
+                                found = true;
+                            }
+                        }
+
+                        if (!found)
+                        {
+                            Console.WriteLine("\nExpense Not Found.");
+                        }
+
+                        break;
+
+                    case 4:
+
+                        double total = 0;
+
+                        foreach (Expense e in expenses)
+                        {
+                            total += e.GetAmount();
+                        }
+
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("\nTotal Expense : Rs." + total);
+                        Console.ResetColor();
+
+                        break;
+
+                    case 5:
+
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("\nThank You...");
+                        Console.ResetColor();
+                        return;
+
+                    default:
+                        Console.WriteLine("\nInvalid Choice.");
+                        break;
+                }
+            }
+
+            catch (FormatException)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nError : Please Enter Numeric Value.");
+                Console.ResetColor();
+            }
+
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("\nError : " + ex.Message);
+                Console.ResetColor();
+            }
+
+            finally
+            {
+                Console.WriteLine("\nPress Any Key To Continue...");
+                Console.ReadKey();
+            }
+        }
+    }
+}
