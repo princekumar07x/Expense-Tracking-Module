@@ -1,187 +1,258 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 class Expense
 {
-    // Private Data Members (Encapsulation)
-    private string category;
-    private string description;
-    private double amount;
-    private DateTime date;
+    public int Id { get; set; }
+    public double Amount { get; set; }
+    public string Category { get; set; }
+    public string Description { get; set; }
+    public DateTime Date { get; set; }
 
-    // Constructor
-    public Expense(string category, string description, double amount)
+    public Expense(int id, double amount, string category,
+                   string description, DateTime date)
     {
-        this.category = category;
-        this.description = description;
-        this.amount = amount;
-        this.date = DateTime.Now;
+        Id = id;
+        Amount = amount;
+        Category = category;
+        Description = description;
+        Date = date;
     }
 
-    // Getter
-    public double GetAmount()
-    {
-        return amount;
-    }
-
-    public string GetCategory()
-    {
-        return category;
-    }
-
-    // Display Method
     public void Display()
     {
-        Console.WriteLine("------------------------------------------");
-        Console.WriteLine("Category    : " + category);
-        Console.WriteLine("Description : " + description);
-        Console.WriteLine("Amount      : Rs." + amount);
-        Console.WriteLine("Date        : " + date.ToShortDateString());
+        Console.WriteLine(
+            $"ID: {Id} | Amount: ₹{Amount:F2} | " +
+            $"Category: {Category} | Description: {Description} | " +
+            $"Date: {Date:dd-MM-yyyy}"
+        );
+    }
+}
+
+class ExpenseTracker
+{
+    private List<Expense> expenses = new List<Expense>();
+    private int nextId = 1;
+
+    // Add Expense
+    public void AddExpense()
+    {
+        try
+        {
+            Console.Write("Enter Amount: ");
+            double amount = Convert.ToDouble(Console.ReadLine());
+
+            if (amount <= 0)
+                throw new ArgumentException(
+                    "Amount must be greater than zero.");
+
+            Console.Write("Enter Category: ");
+            string category = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(category))
+                throw new ArgumentException(
+                    "Category cannot be empty.");
+
+            Console.Write("Enter Description: ");
+            string description = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(description))
+                description = "No description";
+
+            Expense expense = new Expense(
+                nextId++,
+                amount,
+                category,
+                description,
+                DateTime.Now
+            );
+
+            expenses.Add(expense);
+
+            Console.WriteLine("\nExpense added successfully!");
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine(
+                "Error: Please enter a valid numeric amount.");
+        }
+        catch (ArgumentException ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Unexpected Error: " + ex.Message);
+        }
+    }
+
+    // View All Expenses
+    public void ViewExpenses()
+    {
+        try
+        {
+            if (expenses.Count == 0)
+                throw new Exception("No expenses available.");
+
+            Console.WriteLine("\n========== ALL EXPENSES ==========");
+
+            foreach (Expense expense in expenses)
+            {
+                expense.Display();
+            }
+
+            Console.WriteLine("==================================");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    // Total Expense
+    public void ShowTotal()
+    {
+        try
+        {
+            if (expenses.Count == 0)
+                throw new Exception("No expenses available.");
+
+            double total = expenses.Sum(e => e.Amount);
+
+            Console.WriteLine(
+                $"\nTotal Expense = ₹{total:F2}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    // Search by Category
+    public void SearchByCategory()
+    {
+        try
+        {
+            Console.Write("Enter Category: ");
+            string category = Console.ReadLine();
+
+            var result = expenses.Where(
+                e => e.Category.Equals(
+                    category,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            ).ToList();
+
+            if (result.Count == 0)
+                throw new Exception(
+                    "No expenses found for this category.");
+
+            Console.WriteLine(
+                $"\nExpenses in category: {category}");
+
+            foreach (Expense expense in result)
+            {
+                expense.Display();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    // Delete Expense
+    public void DeleteExpense()
+    {
+        try
+        {
+            Console.Write("Enter Expense ID to delete: ");
+            int id = Convert.ToInt32(Console.ReadLine());
+
+            Expense expense = expenses.FirstOrDefault(
+                e => e.Id == id);
+
+            if (expense == null)
+                throw new Exception("Expense ID not found.");
+
+            expenses.Remove(expense);
+
+            Console.WriteLine(
+                "Expense deleted successfully!");
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Error: Enter a valid ID.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
     }
 }
 
 class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
-        List<Expense> expenses = new List<Expense>();
+        ExpenseTracker tracker = new ExpenseTracker();
 
         while (true)
         {
-            Console.Clear();
-            Console.WriteLine("=======================================");
-            Console.WriteLine("     EXPENSE TRACKING SYSTEM");
-            Console.WriteLine("=======================================");
+            Console.WriteLine("\n================================");
+            Console.WriteLine("       EXPENSE TRACKER");
+            Console.WriteLine("================================");
             Console.WriteLine("1. Add Expense");
             Console.WriteLine("2. View All Expenses");
-            Console.WriteLine("3. Search Expense");
-            Console.WriteLine("4. Total Expense");
-            Console.WriteLine("5. Exit");
-            Console.WriteLine("=======================================");
-            Console.Write("Enter Choice : ");
+            Console.WriteLine("3. Show Total Expense");
+            Console.WriteLine("4. Search by Category");
+            Console.WriteLine("5. Delete Expense");
+            Console.WriteLine("6. Exit");
+            Console.WriteLine("================================");
 
             try
             {
+                Console.Write("Enter your choice: ");
                 int choice = Convert.ToInt32(Console.ReadLine());
 
                 switch (choice)
                 {
                     case 1:
-                        Console.Write("\nEnter Category : ");
-                        string category = Console.ReadLine();
-
-                        if (string.IsNullOrWhiteSpace(category))
-                            throw new Exception("Category cannot be empty.");
-
-                        Console.Write("Enter Description : ");
-                        string description = Console.ReadLine();
-
-                        Console.Write("Enter Amount : ");
-
-                        double amount;
-
-                        if (!double.TryParse(Console.ReadLine(), out amount))
-                            throw new FormatException();
-
-                        if (amount <= 0)
-                            throw new Exception("Amount must be greater than zero.");
-
-                        Expense exp = new Expense(category, description, amount);
-
-                        expenses.Add(exp);
-
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("\nExpense Added Successfully.");
-                        Console.ResetColor();
+                        tracker.AddExpense();
                         break;
 
                     case 2:
-
-                        if (expenses.Count == 0)
-                        {
-                            Console.WriteLine("\nNo Expenses Found.");
-                        }
-                        else
-                        {
-                            Console.WriteLine("\n========== Expense List ==========");
-
-                            foreach (Expense e in expenses)
-                            {
-                                e.Display();
-                            }
-                        }
-
+                        tracker.ViewExpenses();
                         break;
 
                     case 3:
-
-                        Console.Write("\nEnter Category To Search : ");
-                        string search = Console.ReadLine();
-
-                        bool found = false;
-
-                        foreach (Expense e in expenses)
-                        {
-                            if (e.GetCategory().Equals(search, StringComparison.OrdinalIgnoreCase))
-                            {
-                                e.Display();
-                                found = true;
-                            }
-                        }
-
-                        if (!found)
-                        {
-                            Console.WriteLine("\nExpense Not Found.");
-                        }
-
+                        tracker.ShowTotal();
                         break;
 
                     case 4:
-
-                        double total = 0;
-
-                        foreach (Expense e in expenses)
-                        {
-                            total += e.GetAmount();
-                        }
-
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("\nTotal Expense : Rs." + total);
-                        Console.ResetColor();
-
+                        tracker.SearchByCategory();
                         break;
 
                     case 5:
+                        tracker.DeleteExpense();
+                        break;
 
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.WriteLine("\nThank You...");
-                        Console.ResetColor();
+                    case 6:
+                        Console.WriteLine(
+                            "Thank you for using Expense Tracker!");
                         return;
 
                     default:
-                        Console.WriteLine("\nInvalid Choice.");
+                        Console.WriteLine(
+                            "Invalid choice! Select 1 to 6.");
                         break;
                 }
             }
-
             catch (FormatException)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nError : Please Enter Numeric Value.");
-                Console.ResetColor();
-            }
-
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("\nError : " + ex.Message);
-                Console.ResetColor();
-            }
-
-            finally
-            {
-                Console.WriteLine("\nPress Any Key To Continue...");
-                Console.ReadKey();
+                Console.WriteLine(
+                    "Error: Please enter a valid number.");
             }
         }
     }
