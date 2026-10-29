@@ -1,0 +1,326 @@
+controllers
+feedbackcontrollers.cs=>
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
+using FeedbackManagement.Models;
+
+namespace FeedbackManagement.Controllers
+{
+    public class FeedbackController : Controller
+    {
+        private static List<Feedback> feedbackList = new List<Feedback>();
+        private static int nextId = 1;
+
+        // Display all feedback
+        public ActionResult Index()
+        {
+            return View(feedbackList);
+        }
+
+        // Display feedback form
+        [HttpGet]
+        public ActionResult Create()
+        {
+            return View();
+        }
+
+        // Submit feedback
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(Feedback feedback)
+        {
+            if (ModelState.IsValid)
+            {
+                feedback.Id = nextId++;
+                feedbackList.Add(feedback);
+
+                return RedirectToAction("Index");
+            }
+
+            return View(feedback);
+        }
+    }
+}
+
+
+
+
+homecontroller.cs =>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace FeedbackManagement.Controllers
+{
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        public ActionResult About()
+        {
+            ViewBag.Message = "Your application description page.";
+
+            return View();
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.Message = "Your contact page.";
+
+            return View();
+        }
+    }
+}
+
+
+
+Models
+deedback.cs =>
+
+using System.ComponentModel.DataAnnotations;
+
+namespace FeedbackManagement.Models
+{
+    public class Feedback
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Please enter your name")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Please enter your email")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Please select a rating")]
+        public string Rating { get; set; }
+
+        [Required(ErrorMessage = "Please enter your feedback")]
+        public string Comments { get; set; }
+    }
+}
+
+
+
+views
+feedback
+_feedbackform.cshtml
+
+@model FeedbackManagement.Models.Feedback
+
+@using (Html.BeginForm("Create", "Feedback", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Name)
+        @Html.TextBoxFor(m => m.Name,
+            new { @class = "form-control", placeholder = "Enter your name" })
+        @Html.ValidationMessageFor(m => m.Name, "",
+            new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Email)
+        @Html.TextBoxFor(m => m.Email,
+            new { @class = "form-control", placeholder = "Enter your email" })
+        @Html.ValidationMessageFor(m => m.Email, "",
+            new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Rating)
+        @Html.DropDownListFor(m => m.Rating,
+            new SelectList(new[] { "Excellent", "Good", "Average", "Poor" }),
+            "-- Select Rating --",
+            new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Rating, "",
+            new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Comments)
+        @Html.TextAreaFor(m => m.Comments,
+            new
+                 {
+                     @class = "form-control",
+                     rows = "4",
+                  placeholder = "Enter your feedback"
+                 })
+        @Html.ValidationMessageFor(m => m.Comments, "",
+            new { @class = "text-danger" })
+    </div>
+
+    <br />
+    <button type="submit" class="btn btn-primary">
+        Submit Feedback
+    </button>
+}
+
+
+
+create.cshtml =>
+
+@model FeedbackManagement.Models.Feedback
+
+@{
+    ViewBag.Title = "Submit Feedback";
+}
+
+<h2>Feedback Form</h2>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        @Html.Partial("_FeedbackForm",
+            Model ?? new FeedbackManagement.Models.Feedback())
+    </div>
+</div>
+
+<p>
+    @Html.ActionLink("View All Feedback", "Index", "Feedback")
+</p>
+
+
+
+index.cshtml =>
+
+@model IEnumerable<FeedbackManagement.Models.Feedback>
+
+@{
+    ViewBag.Title = "Feedback List";
+}
+
+<h2>Feedback List</h2>
+
+<p>
+    @Html.ActionLink("Submit New Feedback", "Create", "Feedback",
+        null, new { @class = "btn btn-primary" })
+</p>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Rating</th>
+                <th>Comments</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Email</td>
+                    <td>@item.Rating</td>
+                    <td>@item.Comments</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No feedback available. Please submit your first feedback.</p>
+}
+
+
+
+shared
+_layout.cshtml =>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Feedback Management</title>
+
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
+        <div class="container">
+
+            @Html.ActionLink(
+                "Feedback Management",
+                "Index",
+                "Feedback",
+                new { area = "" },
+                new { @class = "navbar-brand" }
+            )
+
+            <button type="button"
+                    class="navbar-toggler"
+                    data-bs-toggle="collapse"
+                    data-bs-target=".navbar-collapse"
+                    title="Toggle navigation"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Feedback List",
+                            "Index",
+                            "Feedback",
+                            new { area = "" },
+                            new { @class = "nav-link" }
+                        )
+                    </li>
+
+                    <li class="nav-item">
+                        @Html.ActionLink(
+                            "Submit Feedback",
+                            "Create",
+                            "Feedback",
+                            new { area = "" },
+                            new { @class = "nav-link" }
+                        )
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container body-content">
+        @RenderBody()
+
+        <hr />
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; @DateTime.Now.Year - Feedback Management System</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+
